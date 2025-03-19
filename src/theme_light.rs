@@ -1,3 +1,5 @@
+use std::string::ToString;
+
 // Copyright (c) 2025 William Arthur Hood
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,7 +20,7 @@
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
-pub const THEME_LIGHT: &str = "
+pub const THEME_LIGHT: String = "
     <style>
         html {
             font-family: sans-serif
@@ -183,4 +185,4 @@ pub const THEME_LIGHT: &str = "
             cursor: pointer;
         }
     </style>
-";
+".to_string();
