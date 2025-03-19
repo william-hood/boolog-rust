@@ -1,5 +1,5 @@
-# 🚧 WORK IN PROGRESS 🚧
-<img align="left" src="examples/boolog-logo-sm.gif">
+# <img src="examples/boolog-logo-sm.gif"> 🚧 WORK IN PROGRESS 🚧
+<hr>
 
 ## I'm in the process of translating Boolog into Rust, based on its Go and Kotlin versions.
 
