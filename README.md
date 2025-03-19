@@ -6,9 +6,9 @@
 
 ## Watch this space and when Boolog for Rust is ready it'll be announced here.
 
-## Golang version is [here](../boolog-go)
+## Golang version is [here](https://github.com/william-hood/boolog-go)
 
-## Kotlin/Java version is [here](../Hoodland-Open-Source-Projects) under its old title "Memoir". Updating Memoir to be Boolog, complete with the new themes, will be my next project after this.
+## Kotlin/Java version is [here](https://github.com/william-hood/Hoodland-Open-Source-Projects) under its old title "Memoir". Updating Memoir to be Boolog, complete with the new themes, will be my next project after this.
 
 ## All of my open source software is released under the MIT license, because that's the one employers like best!
 
