@@ -23,6 +23,7 @@ extern crate chrono;
 extern crate string_builder;
 extern crate uuid;
 
+use std::io::Write;
 use std::string::ToString;
 use chrono::Local;
 use string_builder::Builder;
@@ -30,7 +31,7 @@ use uuid::Uuid;
 
 const STARTING_CONTENT: String = "<table class=\"left_justified\">\r\n".to_string();
 
-fn highlight(message: &str, style: &str) -> String {
+fn highlight(message: &str) -> String {
     return highlight_with_style(message, "highlighted");
 }
 
@@ -40,12 +41,11 @@ fn highlight_with_style(message: &str, style: &str) -> String {
 
 pub struct Boolog {
     title: String,
-    for_plain_text: &mut impl Write + ?Sized,
-    for_html: &mut impl Write + ?Sized,
-    theme: String,
+    for_plain_text: Box<dyn Write>,
+    for_html: Box<dyn Write>,
     show_time_stamps: bool,
     show_emojis: bool,
-    header_function: &dyn Fn(i32) -> i32,
+    header_function: dyn Fn(String) -> String,
     content: Builder,
     is_concluded: bool,
     first_echo: bool
@@ -55,18 +55,20 @@ impl Boolog {
     pub fn new(
         &mut self,
         title: String,
-        for_plain_text: &mut impl Write + ?Sized,
-        for_html: &mut impl Write + ?Sized,
+        plain_text: Option<Box<dyn Write>>,
+        html: Option<Box<dyn Write>>,
         theme: String,
         show_time_stamps: bool,
         show_emojis: bool,
         header_function: &dyn Fn(String) -> String
     ) -> Boolog {
-        let result = Boolog {
+        let for_plain_text: Box<dyn Write> = plain_text.unwrap_or(Box::new(std::io::stdout()));
+        let for_html: Box<dyn Write> = html.unwrap_or(Box::default());
+
+        let mut result = Boolog {
             title,
             for_plain_text,
             for_html,
-            theme,
             show_time_stamps,
             show_emojis,
             header_function,
@@ -75,16 +77,16 @@ impl Boolog {
             first_echo: true
         };
 
-        if (self.for_html != null) {
-            self.for_html.write("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>{self.title}</title>\r\n");
-            self.for_html.write(MEMOIR_LOG_STYLING);
-            self.for_html.write("</head>\r\n<body>\r\n");
+        if (self.for_html != Box::default()) {
+            self.for_html.write("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>{self.title}</title>\r\n".as_bytes());
+            self.for_html.write(theme.as_bytes());
+            self.for_html.write("</head>\r\n<body>\r\n".as_bytes());
             self.for_html.write(self.header_function(&self.title));
         }
 
         result.content.append(STARTING_CONTENT);
 
-        return &result;
+        result
     }
 
     pub fn was_used(&mut self) -> bool {
