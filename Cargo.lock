@@ -34,7 +34,7 @@ name = "boolog"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "string-builder",
+ "rstring-builder",
  "uuid",
 ]
 
@@ -170,6 +170,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rstring-builder"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7785259ac97a6d9de707c80b052e1d19c80d81c1d45ebb6912ecde09356a830"
+
+[[package]]
 name = "rustversion"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -200,12 +206,6 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
-name = "string-builder"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bd10a070fb1f2796a288abec42695db4682a82b6f12ffacd60fb8d5ad3a4a12"
 
 [[package]]
 name = "syn"
