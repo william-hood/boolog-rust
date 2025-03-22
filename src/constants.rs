@@ -19,21 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-pub const EMOJI_SETUP: &str = "🛠";
-pub const EMOJI_CLEANUP: &str = "🧹";
-pub const EMOJI_PASSING_TEST: &str = "✅";
-pub const EMOJI_SUBJECTIVE_TEST: &str = "🤔";
-pub const EMOJI_INCONCLUSIVE_TEST: &str = "🛑";
-pub const EMOJI_FAILING_TEST: &str = "❌";
-pub const EMOJI_DEBUG: &str = "🐞";
-pub const EMOJI_ERROR: &str = "😱";
-pub const EMOJI_BOOLOG: &str = "📝";
-pub const EMOJI_TEXT_BOOLOG_CONCLUDE: &str = "⤴️";
-pub const EMOJI_TEXT_BLANK_LINE: &str = "";
-pub const EMOJI_OBJECT: &str = "🔲";
-pub const EMOJI_CAUSED_BY: &str = "→";
-pub const EMOJI_OUTGOING: &str = "↗️";
-pub const EMOJI_INCOMING: &str = "↩️";
+pub const EMOJI_SETUP: &[u8] = "🛠".as_bytes();
+pub const EMOJI_CLEANUP: &[u8] = "🧹".as_bytes();
+pub const EMOJI_PASSING_TEST: &[u8] = "✅".as_bytes();
+pub const EMOJI_SUBJECTIVE_TEST: &[u8] = "🤔".as_bytes();
+pub const EMOJI_INCONCLUSIVE_TEST: &[u8] = "🛑".as_bytes();
+pub const EMOJI_FAILING_TEST: &[u8] = "❌".as_bytes();
+pub const EMOJI_DEBUG: &[u8] = "🐞".as_bytes();
+pub const EMOJI_ERROR: &[u8] = "😱".as_bytes();
+pub const EMOJI_BOOLOG: &[u8] = "📝".as_bytes();
+pub const EMOJI_TEXT_BOOLOG_CONCLUDE: &[u8] = "⤴️".as_bytes();
+pub const EMOJI_TEXT_BLANK_LINE: &[u8] = "".as_bytes();
+pub const EMOJI_OBJECT: &[u8] = "🔲".as_bytes();
+pub const EMOJI_CAUSED_BY: &[u8] = "→".as_bytes();
+pub const EMOJI_OUTGOING: &[u8] = "↗️".as_bytes();
+pub const EMOJI_INCOMING: &[u8] = "↩️".as_bytes();
 pub const UNKNOWN: &str = "(unknown)";
 
 pub const NAMELESS: &str = "(name not given)";
