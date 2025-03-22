@@ -23,40 +23,56 @@ extern crate chrono;
 extern crate rstring_builder;
 extern crate uuid;
 
-use std::io::{Stdout, Write};
+use std::fs;
+use std::fs::File;
+use std::io::{stdout, BufWriter, Write};
+use std::path::Path;
 use std::string::ToString;
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Local};
 use rstring_builder::StringBuilder;
 use uuid::Uuid;
 use crate::constants::{ALREADY_CONCLUDED_MESSAGE, EMOJI_BOOLOG, EMOJI_DEBUG, EMOJI_ERROR, EMOJI_TEXT_BLANK_LINE, EMOJI_TEXT_BOOLOG_CONCLUDE};
 
-const STARTING_CONTENT: String = "<table class=\"left_justified\">\r\n".to_string();
+const STARTING_CONTENT: &str = "<table class=\"left_justified\">\r\n";
 
-pub struct Boolog {
-    title: String,
-    for_plain_text: Box<dyn Write>,
-    for_html: Box<dyn Write>,
+pub struct Boolog<'a> {
+    title: &'a str,
+    for_plain_text: Option<File>,
+    for_html: Option<File>,
     show_time_stamps: bool,
     show_emojis: bool,
-    header_function: dyn Fn(String) -> String,
     content: Vec<u8>,
     is_concluded: bool,
     first_echo: bool
 }
 
-impl Boolog {
+impl<'a> Boolog<'a> {
     pub fn new(
-        &mut self,
-        title: String,
-        plain_text: Option<Box<dyn Write>>,
-        html: Option<Box<dyn Write>>,
-        theme: String,
+        title: &'a str,
+        plain_text: Option<String>,
+        html: Option<String>,
+        theme: &str,
         show_time_stamps: bool,
         show_emojis: bool,
-        header_function: &dyn Fn(String) -> String
-    ) -> Boolog {
-        let for_plain_text: Box<dyn Write> = plain_text.unwrap_or(Box::new(std::io::stdout()));
-        let for_html: Box<dyn Write> = html.unwrap_or(Box::default());
+        header_function: fn(&str) -> &[u8]
+    ) -> Boolog<'a> {
+        let for_plain_text: Option<File> = match plain_text {
+            Some(ref x) => Some(fs::OpenOptions::new().create(true).append(true).open(&x).unwrap()),
+            None => None,
+        };
+        let for_html: Option<File> = match html {
+            Some(ref x) => {
+                let mut html_file = fs::OpenOptions::new().create(true).append(true).open(&x).unwrap();
+                html_file.write("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>".as_bytes());
+                html_file.write(title.as_bytes());
+                html_file.write("</title>\r\n".as_bytes());
+                html_file.write(theme.as_bytes());
+                html_file.write("</head>\r\n<body>\r\n".as_bytes());
+                html_file.write(header_function(title));
+                Some(html_file)
+            },
+            None => None,
+        };
 
         let mut result = Boolog {
             title,
@@ -64,22 +80,12 @@ impl Boolog {
             for_html,
             show_time_stamps,
             show_emojis,
-            header_function,
             content: Vec::new(),
             is_concluded: false,
             first_echo: true
         };
 
-        if self.for_html != Box::default() {
-            self.for_html.write("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>".as_bytes());
-            self.for_html.write(self.title.as_bytes());
-            self.for_html.write("</title>\r\n".as_bytes());
-            self.for_html.write(theme.as_bytes());
-            self.for_html.write("</head>\r\n<body>\r\n".as_bytes());
-            self.for_html.write(self.header_function(&self.title));
-        }
-
-        result.content.append(STARTING_CONTENT);
+        result.content.append(STARTING_CONTENT.as_bytes().to_vec().as_mut());
 
         result
     }
@@ -89,30 +95,47 @@ impl Boolog {
     }
 
     pub fn echo_plain_text(&mut self, message: &[u8], emoji: &[u8], timestamp: DateTime<Local>) -> Result<(), &str> {
-        if self.for_plain_text != Box::default() {
-            if self.is_concluded {
-                Err(ALREADY_CONCLUDED_MESSAGE);
-            }
+        if self.is_concluded {
+            Err::<(), &str>(ALREADY_CONCLUDED_MESSAGE);
+        }
 
-            if self.first_echo {
-                self.first_echo = false;
-                self.echo_plain_text("".as_bytes(), EMOJI_TEXT_BLANK_LINE, timestamp);
-                self.echo_plain_text(self.title.as_bytes(), EMOJI_BOOLOG, timestamp);
-            }
+        if self.first_echo {
+            self.first_echo = false;
+            self.echo_plain_text("".as_bytes(), EMOJI_TEXT_BLANK_LINE, timestamp);
+            self.echo_plain_text(self.title.as_bytes(), EMOJI_BOOLOG, timestamp);
+        }
 
-            if self.show_time_stamps {
-                let formatted_date = format!("{}", timestamp.format("%Y-%m-%d %H:%M:%S.%9f"));
-                self.for_plain_text.write(formatted_date.as_bytes());
-                self.for_plain_text.write("\t".as_bytes());
-            }
+        let formatted_date = format!("{}", timestamp.format("%Y-%m-%d %H:%M:%S.%9f"));
 
-            if self.show_emojis {
-                self.for_plain_text.write("\t".as_bytes());
-                self.for_plain_text.write(emoji);
-            }
+        match self.for_plain_text {
+            Some(ref mut text_file) => {
+                if self.show_time_stamps {
+                    text_file.write(formatted_date.as_bytes());
+                    text_file.write("\t".as_bytes());
+                }
 
-            self.for_plain_text.write(message);
-            self.for_plain_text.write("\r\n".as_bytes());
+                if self.show_emojis {
+                    text_file.write("\t".as_bytes());
+                    text_file.write(emoji);
+                }
+
+                text_file.write(message);
+                text_file.write("\r\n".as_bytes());
+            },
+            None => {
+                if self.show_time_stamps {
+                    print!("{}", formatted_date);
+                    print!("\t");
+                }
+
+                if self.show_emojis {
+                    print!("\t");
+                    print!("{}", String::from_utf8_lossy(emoji));
+                }
+
+                print!("{}", String::from_utf8_lossy(message));
+                print!("\r\n");
+            }
         }
 
         Ok(())
@@ -120,30 +143,30 @@ impl Boolog {
 
     pub fn write_to_html(&mut self, message: &[u8], emoji: &[u8], timestamp: DateTime<Local>) -> Result<(), &str> {
         if self.is_concluded {
-            Err(ALREADY_CONCLUDED_MESSAGE);
+            Err::<(), &str>(ALREADY_CONCLUDED_MESSAGE);
         }
 
-        self.content.append("<tr>".into_bytes());
+        self.content.append("<tr>".as_bytes().to_vec().as_mut());
 
         if self.show_time_stamps {
             let formatted_date = format!("{}", timestamp.format("%Y-%m-%d"));
             let formatted_time = format!("{}", timestamp.format("%H:%M:%S.%9f"));
-            self.content.append("<td class=\"min\"><small>".into_bytes());
-            self.content.append(formatted_date.into_bytes());
-            self.content.append("</small></td><td>&nbsp;</td><td class=\"min\"><small>".into_bytes());
-            self.content.append(formatted_time.into_bytes());
-            self.content.append("</small></td><td>&nbsp;</td>".into_bytes());
+            self.content.append("<td class=\"min\"><small>".as_bytes().to_vec().as_mut());
+            self.content.append(formatted_date.as_bytes().to_vec().as_mut());
+            self.content.append("</small></td><td>&nbsp;</td><td class=\"min\"><small>".as_bytes().to_vec().as_mut());
+            self.content.append(formatted_time.as_bytes().to_vec().as_mut());
+            self.content.append("</small></td><td>&nbsp;</td>".as_bytes().to_vec().as_mut());
         }
 
         if self.show_emojis {
-            self.content.append("<td><h2>".into_bytes());
-            self.content.append(emoji);
-            self.content.append("</h2></td>".into_bytes());
+            self.content.append("<td><h2>".as_bytes().to_vec().as_mut());
+            self.content.append(emoji.to_vec().as_mut());
+            self.content.append("</h2></td>".as_bytes().to_vec().as_mut());
         }
 
-        self.content.append("<td>".into_bytes());
-        self.content.append(message);
-        self.content.append("</td></tr>\r\n".into_bytes());
+        self.content.append("<td>".as_bytes().to_vec().as_mut());
+        self.content.append(message.to_vec().as_mut());
+        self.content.append("</td></tr>\r\n".as_bytes().to_vec().as_mut());
 
         Ok(())
     }
@@ -156,16 +179,25 @@ impl Boolog {
             self.echo_plain_text("".as_bytes(), EMOJI_TEXT_BOOLOG_CONCLUDE, timestamp);
             self.echo_plain_text("".as_bytes(), EMOJI_TEXT_BLANK_LINE, timestamp);
 
-            self.for_plain_text.flush();
-            //drop(self.for_plain_text);
+            match self.for_plain_text {
+                Some(ref mut text_file) => {
+                    text_file.flush();
+                    //text_file.drop();
+                },
+                None => { }
+            }
 
-            self.content.append("\r\n</table>".into_bytes());
+            self.content.append("\r\n</table>".as_bytes().to_vec().as_mut());
 
-            if self.for_html != Box::default() {
-                self.for_html.write(self.content.as_slice());
-                self.for_html.write("\r\n</body>\r\n</html>".as_bytes());
-                self.for_html.flush();
-                //drop(self.for_html);
+
+            match self.for_html {
+                Some(ref mut html_file) => {
+                    html_file.write(self.content.as_slice());
+                    html_file.write("\r\n</body>\r\n</html>".as_bytes());
+                    html_file.flush();
+                    //html_file.drop();
+                },
+                None => {  },
             }
         }
 
@@ -222,13 +254,13 @@ impl Boolog {
 
     pub fn show_boolog_detailed(&mut self, mut subordinate: Boolog, emoji: &[u8], style: String, recurse_level: u8) -> Result<Vec<u8>, &str> {
         let timestamp = Local::now();
-        let subordinate_content = subordinate.conclude();
+        let subordinate_content: &mut Vec<u8> = subordinate.conclude().as_mut();
         let result = wrap_as_subordinate(subordinate.title, subordinate_content, style);
 
         if (recurse_level > 0) {
             let check = self.write_to_html(result.as_slice(), emoji, timestamp);
             if check.is_err() {
-                Err(check.err().unwrap());
+                Err::<Vec<u8>, &str>(check.err().unwrap());
             }
         }
 
@@ -260,23 +292,23 @@ pub fn ecapsulation_tag() -> String {
     format!("lvl-{tag}")
 }
 
-pub fn wrap_as_subordinate(boolog_title: String, boolog_content: Vec<u8>, style: String) -> Vec<u8> {
+pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: &mut Vec<u8>, style: String) -> Vec<u8> {
     let identifier = Uuid::new_v4().to_string();
     let tag = ecapsulation_tag();
     let mut result: Vec<u8> = Vec::new();
-    result.append("\r\n\r\n<div class=\"boolog ".into_bytes());
-    result.append(style.into_bytes());
-    result.append("\">\r\n<label for=\"".into_bytes());
-    let check = identifier.into_bytes();
-    result.append(check.clone());
-    result.append("\">\r\n<input id=\"".into_btyes());
+    result.append("\r\n\r\n<div class=\"boolog ".as_bytes().to_vec().as_mut());
+    result.append(style.as_bytes().to_vec().as_mut());
+    result.append("\">\r\n<label for=\"".as_bytes().to_vec().as_mut());
+    let check : &mut Vec<u8> = identifier.as_bytes().to_vec().as_mut();
     result.append(check);
-    result.append("\" class=\"gone\" type=\"checkbox\">\r\n<h2>".into_bytes());
-    result.append(boolog_title.into_bytes());
-    result.append("</h2>\r\n<div class=\"".into_bytes());
-    result.append(tag.into_bytes());
-    result.append("\">\r\n".into_bytes());
+    result.append("\">\r\n<input id=\"".as_bytes().to_vec().as_mut());
+    result.append(check);
+    result.append("\" class=\"gone\" type=\"checkbox\">\r\n<h2>".as_bytes().to_vec().as_mut());
+    result.append(boolog_title.as_bytes().to_vec().as_mut());
+    result.append("</h2>\r\n<div class=\"".as_bytes().to_vec().as_mut());
+    result.append(tag.as_bytes().to_vec().as_mut());
+    result.append("\">\r\n".as_bytes().to_vec().as_mut());
     result.append(boolog_content);
-    result.append("\r\n</div></label></div>".into_bytes());
+    result.append("\r\n</div></label></div>".as_bytes().to_vec().as_mut());
     result
 }
