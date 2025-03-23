@@ -56,12 +56,12 @@ impl<'a> Boolog<'a> {
         header_function: fn(&str) -> Vec<u8>
     ) -> Boolog<'a> {
         let for_plain_text: Option<File> = match plain_text {
-            Some(ref x) => Some(fs::OpenOptions::new().create(true).append(true).open(&x).unwrap()),
+            Some(ref x) => Some(fs::OpenOptions::new().write(true).create(true).truncate(true).open(&x).unwrap()),
             None => None,
         };
         let for_html: Option<File> = match html {
             Some(ref x) => {
-                let mut html_file = fs::OpenOptions::new().create(true).append(true).open(&x).unwrap();
+                let mut html_file = fs::OpenOptions::new().write(true).create(true).truncate(true).open(&x).unwrap();
                 html_file.write("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>".as_bytes());
                 html_file.write(title.as_bytes());
                 html_file.write("</title>\r\n".as_bytes());
