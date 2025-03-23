@@ -19,8 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-use std::string::ToString;
-
 pub const EMOJI_SETUP: &[u8] = "🛠".as_bytes();
 pub const EMOJI_CLEANUP: &[u8] = "🧹".as_bytes();
 pub const EMOJI_PASSING_TEST: &[u8] = "✅".as_bytes();

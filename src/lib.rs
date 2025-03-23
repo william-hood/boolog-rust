@@ -31,14 +31,10 @@ mod boolog;
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, option};
-    use std::fs::File;
-    use std::io::stdout;
     use std::path::PathBuf;
     use homedir::my_home;
     use crate::boolog::{default_header, Boolog};
     use crate::theme_light::THEME_LIGHT;
-    use super::*;
 
     #[test]
     fn it_works() {

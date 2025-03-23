@@ -25,8 +25,7 @@ extern crate uuid;
 
 use std::fs;
 use std::fs::File;
-use std::io::{stdout, BufWriter, Write};
-use std::path::Path;
+use std::io::Write;
 use std::string::ToString;
 use chrono::{DateTime, Local};
 use rstring_builder::StringBuilder;
@@ -115,8 +114,8 @@ impl<'a> Boolog<'a> {
                 }
 
                 if self.show_emojis {
-                    text_file.write("\t".as_bytes());
                     text_file.write(emoji);
+                    text_file.write("\t".as_bytes());
                 }
 
                 text_file.write(message);
@@ -129,8 +128,8 @@ impl<'a> Boolog<'a> {
                 }
 
                 if self.show_emojis {
-                    print!("\t");
                     print!("{}", String::from_utf8_lossy(emoji));
+                    print!("\t");
                 }
 
                 print!("{}", String::from_utf8_lossy(message));
