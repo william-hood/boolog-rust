@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+use std::string::ToString;
+
 pub const EMOJI_SETUP: &[u8] = "🛠".as_bytes();
 pub const EMOJI_CLEANUP: &[u8] = "🧹".as_bytes();
 pub const EMOJI_PASSING_TEST: &[u8] = "✅".as_bytes();
@@ -37,6 +39,7 @@ pub const EMOJI_INCOMING: &[u8] = "↩️".as_bytes();
 pub const UNKNOWN: &str = "(unknown)";
 
 pub const NAMELESS: &str = "(name not given)";
+
 pub const ALREADY_CONCLUDED_MESSAGE: &str = "An attempt was made to write to a Boolog that was already concluded.\r\n<li>Once a Boolog has been concluded it can no longer be written to.\r\n<li>Passing a Boolog to the ShowBoolog() method will automatically conclude it.";
 pub const MAX_OBJECT_FIELDS_TO_DISPLAY: i32 = 10;
 pub const MAX_SHOW_OBJECT_RECURSION: i32 = 10;
