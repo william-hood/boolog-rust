@@ -1,3 +1,5 @@
+<img src="examples/Boolog Rust Prototype.jpg" alt="Screen Shot of Output">
+
 # <img src="examples/boolog-logo-sm.gif"> 🚧 WORK IN PROGRESS 🚧
 
 ## I'm in the process of translating Boolog into Rust, based on its Go and Kotlin versions.
