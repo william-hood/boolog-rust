@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+mod theme_none;
 mod theme_classic;
 mod theme_light_flat;
 mod theme_light;
@@ -27,14 +28,19 @@ mod theme_dark_flat;
 mod theme_dark_gradient;
 mod constants;
 mod boolog;
-
+mod show_as_json;
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use std::path::PathBuf;
     use homedir::my_home;
-    use crate::boolog::{default_header, Boolog};
+    use serde::Serialize;
+    use crate::boolog::{default_header, no_header, Boolog};
+    use crate::constants::EMOJI_BOOLOG;
+    use crate::show_as_json::ShowObjectExt;
     use crate::theme_light::THEME_LIGHT;
+    use crate::theme_none::THEME_NONE;
 
     #[test]
     fn it_works() {
@@ -63,6 +69,60 @@ mod tests {
         log.info("Let's suppose you need to check on the state of a data structure at a certain point in the program.");
         log.info("Look at the class \"TestStruct\" at the bottom of this source code file. Let's render one!");
 
+        let check = get_test_struct();
+        log.show_as_json(check, "TestStruct", "check");
+
+        let mut sublog = Boolog::new(
+            "Keep on embedding Boologs within Boologs within Boologs",
+            None,
+            None,
+            THEME_NONE,
+            true,
+            true,
+            no_header
+        );
+
+        sublog.info("The other day");
+        sublog.info("Upon the stair");
+        sublog.info("I saw a man");
+        sublog.info("Who wasn't there");
+        sublog.skip_line();
+        sublog.info("He wasn't there");
+        sublog.info("Again today...");
+        sublog.skip_line();
+        sublog.error("Gee, I wish he'd go away!");
+
+        log.show_boolog_detailed(sublog, EMOJI_BOOLOG, "neutral", 0);
+
+        log.info("That's all folks!");
+
         log.conclude();
+    }
+
+    #[derive(Serialize)]
+    struct TestStruct {
+        name: String,
+        value: i32,
+        other_value: f32,
+        // Type recursion in Rust is illegal by design
+        //child: Option<TestStruct>,
+        troll: String,
+        rogue: HashMap<String, String>
+    }
+
+    fn get_test_struct() -> TestStruct {
+        let mut rogue = HashMap::new();
+        rogue.insert(String::from("LOTR"), String::from("Sauron"));
+        rogue.insert(String::from("Star Wars"), String::from("Darth Vader"));
+        rogue.insert(String::from("It"), String::from("Pennywise"));
+
+        TestStruct {
+            name: String::from("Hi"),
+            value: 7,
+            other_value: 42.9,
+            //child: None,
+            troll: String::from("(nothing)"),
+            rogue
+        }
     }
 }

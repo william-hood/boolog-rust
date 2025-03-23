@@ -181,7 +181,6 @@ impl<'a> Boolog<'a> {
             match self.for_plain_text {
                 Some(ref mut text_file) => {
                     text_file.flush();
-                    //text_file.drop();
                 },
                 None => { }
             }
@@ -194,7 +193,6 @@ impl<'a> Boolog<'a> {
                     html_file.write(self.content.as_slice());
                     html_file.write("\r\n</body>\r\n</html>".as_bytes());
                     html_file.flush();
-                    //html_file.drop();
                 },
                 None => {  },
             }
@@ -250,15 +248,15 @@ impl<'a> Boolog<'a> {
     }
 
     pub fn show_boolog(&mut self, subordinate: Boolog) -> Result<Vec<u8>, String> {
-        return self.show_boolog_detailed(subordinate, EMOJI_BOOLOG, "boolog".to_string(), 0);
+        return self.show_boolog_detailed(subordinate, EMOJI_BOOLOG, "boolog", 0);
     }
 
-    pub fn show_boolog_detailed(&mut self, mut subordinate: Boolog, emoji: &[u8], style: String, recurse_level: u8) -> Result<Vec<u8>, String> {
+    pub fn show_boolog_detailed(&mut self, mut subordinate: Boolog, emoji: &[u8], style: &str, recurse_level: u8) -> Result<Vec<u8>, String> {
         let timestamp = Local::now();
         let subordinate_content: Vec<u8> = subordinate.conclude();
         let result = wrap_as_subordinate(subordinate.title, subordinate_content, style);
 
-        if recurse_level > 0 {
+        if recurse_level < 1 {
             let check = self.write_to_html(result.as_slice(), emoji, timestamp);
             if check.is_err() {
                 Err::<Vec<u8>, String>(check.err().unwrap());
@@ -282,6 +280,10 @@ pub fn default_header(title: &str) -> Vec<u8> {
     result
 }
 
+pub fn no_header(_: &str) -> Vec<u8> {
+    Vec::new()
+}
+
 pub fn highlight_with_style(message: &str, style: &str) -> String {
     return format!("<p class=\"{style} outlined\">&nbsp;{message}&nbsp;</p>")
 }
@@ -295,7 +297,7 @@ pub fn ecapsulation_tag() -> String {
     format!("lvl-{tag}")
 }
 
-pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: Vec<u8>, style: String) -> Vec<u8> {
+pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: Vec<u8>, style: &str) -> Vec<u8> {
     let identifier = Uuid::new_v4().to_string();
     let tag = ecapsulation_tag();
     let mut result: Vec<u8> = Vec::new();
@@ -313,4 +315,8 @@ pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: Vec<u8>, style: S
     result.append(boolog_content.clone().as_mut());
     result.append("\r\n</div></label></div>".as_bytes().to_vec().as_mut());
     result
+}
+
+pub fn treat_as_code(value: &str) -> String {
+    format!("<pre><code><xmp>{value}</xmp></code></pre>")
 }

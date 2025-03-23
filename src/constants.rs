@@ -42,4 +42,4 @@ pub const ALREADY_CONCLUDED_MESSAGE: &str = "An attempt was made to write to a B
 pub const MAX_OBJECT_FIELDS_TO_DISPLAY: i32 = 10;
 pub const MAX_SHOW_OBJECT_RECURSION: i32 = 10;
 pub const MAX_HEADERS_TO_DISPLAY: i32 = 10;
-pub const MAX_BODY_LENGTH_TO_DISPLAY: i32 = 500;
+pub const MAX_BODY_LENGTH_TO_DISPLAY: usize = 500;
