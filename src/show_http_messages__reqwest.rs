@@ -24,7 +24,7 @@ use reqwest::Body;
 use reqwest::header::HeaderMap;
 use uuid::Uuid;
 use crate::boolog::{ecapsulation_tag, treat_as_code, Boolog};
-use crate::constants::{EMOJI_OBJECT, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, NAMELESS};
+use crate::constants::{EMOJI_INCOMING, EMOJI_OBJECT, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, NAMELESS};
 
 pub trait ShowHttpReqwestExt {
     fn show_http_request(&mut self, req: reqwest::Request, callback: fn(&str, &str) -> &str);
@@ -93,7 +93,34 @@ impl ShowHttpReqwestExt for Boolog<'_> {
     fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str){
         let mut result: Vec<u8> = Vec::new();
         let timestamp = Local::now();
+        let mut style = "implied_bad";
 
+        if resp.status().is_success() {
+            style = "implied_good";
+        }
+
+        result.append("<div class=\"incoming ".as_bytes().to_vec().as_mut());
+        result.append(style.as_bytes().to_vec().as_mut());
+        result.append("\">\r\n".as_bytes().to_vec().as_mut());
+
+        let text_rendition = resp.status().canonical_reason().unwrap_or("").to_string();
+
+        result.append("<center><h2>".as_bytes().to_vec().as_mut());
+        result.append(text_rendition.as_bytes().to_vec().as_mut());
+        result.append("</h2>".as_bytes().to_vec().as_mut());
+
+        /* https://stackoverflow.com/questions/68956743/where-is-the-body-of-a-http-response-stored-with-rust-reqwest
+        In the case of reqwest, the response body is not stored fully in memory unless you ask it to be (by calling .bytes() or .json() for example) — the network connection is still active at that point (the headers have been fully received, but not the body), and so the server is responsible for storing or otherwise being ready to provide the rest of the response. It may be that the HTTP server has the response in its memory, or it may be reading directly from its own disk; and parts of the response will be momentarily stored in various network buffers or moving along cables from their network to yours.
+
+This is why Response doesn't implement Clone, and why the methods for retrieving the body take self; a Response is (besides a way to read response headers) a handle to a network connection that's not finished. You use it to instruct reqwest how to deliver the rest of the file to you — reading it into memory, parsing it into some JSON or other data type, or even processing the bytes as they come in using your own code.
+
+Every good HTTP client will have functionality like this, simply because it is not efficient to store a large response entirely into memory before doing whatever the next step is.
+=/
+         */
+        result.append(self.render_headers_and_body(resp.headers(), resp., &callback));
+
+        self.write_to_html(result.as_slice(), EMOJI_INCOMING, timestamp);
+        self.echo_plain_text(text_rendition, EMOJI_INCOMING, timestamp);
     }
     fn render_headers_and_body(&self, headers: &HeaderMap, body: Option<&Body>, callback: fn(&str, &str) -> &str) -> Vec<u8> {
 
