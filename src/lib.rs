@@ -29,6 +29,7 @@ mod theme_dark_gradient;
 mod constants;
 mod boolog;
 mod show_as_json;
+mod show_http_messages__reqwest;
 
 #[cfg(test)]
 mod tests {

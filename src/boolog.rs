@@ -320,3 +320,7 @@ pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: Vec<u8>, style: &
 pub fn treat_as_code(value: &str) -> String {
     format!("<pre><code><xmp>{value}</xmp></code></pre>")
 }
+
+pub fn callback_do_nothing(field_name: &str, field_value: &str) -> Vec<u8> {
+    field_value.as_bytes().to_vec()
+}
