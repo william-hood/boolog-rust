@@ -24,7 +24,7 @@ use reqwest::{Body, Response, Url};
 use reqwest::header::HeaderMap;
 use uuid::Uuid;
 use crate::boolog::{ecapsulation_tag, treat_as_code, Boolog};
-use crate::constants::{EMOJI_INCOMING, EMOJI_OBJECT, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, NAMELESS};
+use crate::constants::{EMOJI_INCOMING, EMOJI_OBJECT, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, MAX_HEADERS_TO_DISPLAY, NAMELESS};
 
 pub trait ShowHttpReqwestExt {
     fn show_http_request(&mut self, req: reqwest::Request, callback: fn(&str, &str) -> &str);
@@ -146,7 +146,75 @@ impl ShowHttpReqwestExt for Boolog<'_> {
         result
     }
     fn render_headers_and_body(&self, headers: &HeaderMap, body_bytes: &[u8], callback: fn(&str, &str) -> &str) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::new();
 
+        // Headers
+        if headers.len() > 0 {
+            result.append("<br><b>Headers</b><br>".as_bytes().to_vec().as_mut());
+
+            let mut rendered_headers: Vec<u8> = Vec::new();
+            rendered_headers.append("<table class=\"gridlines\">\r\n".as_bytes().to_vec().as_mut());
+
+            for (key,value) in headers.iter() {
+                rendered_headers.append("<tr><td>".as_bytes().to_vec().as_mut());
+                rendered_headers.append(key.as_str().as_bytes().to_vec().as_mut());
+                rendered_headers.append("</td><td>".as_bytes().to_vec().as_mut());
+
+                // reqwest appears to return only a single value per key, assuming the key would appear more than once if multiple values exist.
+                let processed_string = callback(key.as_str(), value.to_str().unwrap().as_mut());
+                rendered_headers.append(processed_string.as_bytes().to_vec().as_mut());
+
+                rendered_headers.append("</td></tr>".as_bytes().to_vec().as_mut());
+            }
+
+            if headers.len() > MAX_HEADERS_TO_DISPLAY {
+                let identifier = Uuid::new_v4().to_string();
+                let tag = ecapsulation_tag();
+                result.append("<label for=\"".as_bytes().to_vec().as_mut());
+                result.append(identifier.as_bytes().to_vec().as_mut());
+                result.append("\">\r\n<input id=\"".as_bytes().to_vec().as_mut());
+                result.append(identifier.as_bytes().to_vec().as_mut());
+                result.append("\" type=\"checkbox\">\r\n(show ".as_bytes().to_vec().as_mut());
+                result.append(headers.len().to_string().as_bytes().to_vec().as_mut());
+                result.append(" headers)\r\n<div class=\"".as_bytes().to_vec().as_mut());
+                result.append(tag.as_bytes().to_vec().as_mut());
+                result.append("\">\r\n".as_bytes().to_vec().as_mut());
+                result.append(rendered_headers.as_mut());
+                result.append("</div></label>".as_bytes().to_vec().as_mut());
+            } else {
+                result.append(rendered_headers.as_mut());
+            }
+        } else {
+            result.append("<br><br><small><i>(no headers)</i></small><br>\r\n".as_bytes().to_vec().as_mut());
+        }
+
+        // Body
+        if body_bytes.len() < 1 {
+            result.append("<br><br><small><i>(no payload)</i></small></center>".as_bytes().to_vec().as_mut());
+        } else {
+            let string_payload = String::from_utf8_lossy(body_bytes);
+            let payload_size = string_payload.as_ref().len();
+            result.append("<br><b>Payload</b><br></center>\r\n".as_bytes().to_vec().as_mut());
+            let rendered_body = treat_as_code(string_payload.as_ref());
+
+            if payload_size > MAX_BODY_LENGTH_TO_DISPLAY {
+                let identifier = Uuid::new_v4().to_string();
+                let tag = ecapsulation_tag();
+                result.append("<label for=\"".as_bytes().to_vec().as_mut());
+                result.append(identifier.as_bytes().to_vec().as_mut());
+                result.append("\">\r\n<input id=\"".as_bytes().to_vec().as_mut());
+                result.append(identifier.as_bytes().to_vec().as_mut());
+                result.append("\" type=\"checkbox\">\r\n(show large payload)\r\n<div class=\"".as_bytes().to_vec().as_mut());
+                result.append(tag.as_bytes().to_vec().as_mut());
+                result.append("\">\r\n".as_bytes().to_vec().as_mut());
+                result.append(rendered_body.as_bytes().to_vec().as_mut());
+                result.append("</div></label>".as_bytes().to_vec().as_mut());
+            } else {
+                result.append(rendered_body.as_bytes().to_vec().as_mut());
+            }
+        }
+
+        result
     }
     fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str) -> ConsumedResponse {
 

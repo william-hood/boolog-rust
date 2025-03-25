@@ -41,5 +41,5 @@ pub const NAMELESS: &str = "(name not given)";
 pub const ALREADY_CONCLUDED_MESSAGE: &str = "An attempt was made to write to a Boolog that was already concluded.\r\n<li>Once a Boolog has been concluded it can no longer be written to.\r\n<li>Passing a Boolog to the ShowBoolog() method will automatically conclude it.";
 pub const MAX_OBJECT_FIELDS_TO_DISPLAY: i32 = 10;
 pub const MAX_SHOW_OBJECT_RECURSION: i32 = 10;
-pub const MAX_HEADERS_TO_DISPLAY: i32 = 10;
+pub const MAX_HEADERS_TO_DISPLAY: usize = 10;
 pub const MAX_BODY_LENGTH_TO_DISPLAY: usize = 500;
