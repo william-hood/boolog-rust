@@ -20,7 +20,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 use chrono::Local;
-use reqwest::Body;
+use reqwest::{Body, Response, Url};
 use reqwest::header::HeaderMap;
 use uuid::Uuid;
 use crate::boolog::{ecapsulation_tag, treat_as_code, Boolog};
@@ -31,6 +31,32 @@ pub trait ShowHttpReqwestExt {
     fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str);
     fn render_headers_and_body(&self, headers: &HeaderMap, body: Option<&Body>, callback: fn(&str, &str) -> &str);
     fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str);
+}
+
+pub struct ConsumedResponse<'a> {
+    status: reqwest::StatusCode,
+    headers: &'a HeaderMap,
+    url: &'a Url,
+    content_length: Option<u64>,
+    resp_body_bytes: &'a [u8]
+}
+
+impl ConsumedResponse {
+    pub fn new(resp: Response) -> ConsumedResponse {
+        let status = resp.status();
+        let headers = resp.headers();
+        let url = resp.url();
+        let content_length = resp.content_length();
+        let body_bytes: &[u8] = resp.bytes();
+
+        ConsumedResponse {
+            status,
+            headers,
+            url,
+            content_length,
+            resp_body_bytes: body_bytes
+        }
+    }
 }
 
 impl ShowHttpReqwestExt for Boolog<'_> {
@@ -84,48 +110,45 @@ impl ShowHttpReqwestExt for Boolog<'_> {
         }
         result.append("\r\n</table><br>".as_bytes().to_vec().as_mut());
 
-        result.append(self.render_headers_and_body(req.headers(), req.body(), &callback));
+        result.append(self.render_headers_and_body(req.headers(), req.body().unwrap().as_bytes(), &callback));
 
         self.write_to_html(result.as_slice(), EMOJI_OUTGOING, timestamp);
         self.echo_plain_text(text_rendition, EMOJI_OUTGOING, timestamp);
     }
 
-    fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str){
-        let mut result: Vec<u8> = Vec::new();
+    fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str) -> ConsumedResponse {
+        let mut rendition: Vec<u8> = Vec::new();
         let timestamp = Local::now();
+
+        let result = ConsumedResponse::new(resp);
+
         let mut style = "implied_bad";
 
-        if resp.status().is_success() {
+        if result.status.is_success() {
             style = "implied_good";
         }
 
-        result.append("<div class=\"incoming ".as_bytes().to_vec().as_mut());
-        result.append(style.as_bytes().to_vec().as_mut());
-        result.append("\">\r\n".as_bytes().to_vec().as_mut());
+        rendition.append("<div class=\"incoming ".as_bytes().to_vec().as_mut());
+        rendition.append(style.as_bytes().to_vec().as_mut());
+        rendition.append("\">\r\n".as_bytes().to_vec().as_mut());
 
-        let text_rendition = resp.status().canonical_reason().unwrap_or("").to_string();
+        let text_rendition = result.status.canonical_reason().unwrap_or("").to_string();
 
-        result.append("<center><h2>".as_bytes().to_vec().as_mut());
-        result.append(text_rendition.as_bytes().to_vec().as_mut());
-        result.append("</h2>".as_bytes().to_vec().as_mut());
+        rendition.append("<center><h2>".as_bytes().to_vec().as_mut());
+        rendition.append(text_rendition.as_bytes().to_vec().as_mut());
+        rendition.append("</h2>".as_bytes().to_vec().as_mut());
 
-        /* https://stackoverflow.com/questions/68956743/where-is-the-body-of-a-http-response-stored-with-rust-reqwest
-        In the case of reqwest, the response body is not stored fully in memory unless you ask it to be (by calling .bytes() or .json() for example) — the network connection is still active at that point (the headers have been fully received, but not the body), and so the server is responsible for storing or otherwise being ready to provide the rest of the response. It may be that the HTTP server has the response in its memory, or it may be reading directly from its own disk; and parts of the response will be momentarily stored in various network buffers or moving along cables from their network to yours.
+        rendition.append(self.render_headers_and_body(result.headers, result.resp_body_bytes, callback).as_mut());
 
-This is why Response doesn't implement Clone, and why the methods for retrieving the body take self; a Response is (besides a way to read response headers) a handle to a network connection that's not finished. You use it to instruct reqwest how to deliver the rest of the file to you — reading it into memory, parsing it into some JSON or other data type, or even processing the bytes as they come in using your own code.
+        self.write_to_html(rendition.as_slice(), EMOJI_INCOMING, timestamp);
+        self.echo_plain_text(text_rendition.as_bytes(), EMOJI_INCOMING, timestamp);
 
-Every good HTTP client will have functionality like this, simply because it is not efficient to store a large response entirely into memory before doing whatever the next step is.
-=/
-         */
-        result.append(self.render_headers_and_body(resp.headers(), resp., &callback));
-
-        self.write_to_html(result.as_slice(), EMOJI_INCOMING, timestamp);
-        self.echo_plain_text(text_rendition, EMOJI_INCOMING, timestamp);
+        result
     }
-    fn render_headers_and_body(&self, headers: &HeaderMap, body: Option<&Body>, callback: fn(&str, &str) -> &str) -> Vec<u8> {
+    fn render_headers_and_body(&self, headers: &HeaderMap, body_bytes: &[u8], callback: fn(&str, &str) -> &str) -> Vec<u8> {
 
     }
-    fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str){
+    fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str) -> ConsumedResponse {
 
     }
 }
