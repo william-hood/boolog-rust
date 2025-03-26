@@ -23,11 +23,13 @@ use chrono::Local;
 use uuid::Uuid;
 use serde::Serialize;
 use crate::boolog::{ecapsulation_tag, treat_as_code, Boolog};
-use crate::constants::{EMOJI_OBJECT, MAX_BODY_LENGTH_TO_DISPLAY, NAMELESS};
+use crate::constants::{EMOJI_ERROR, EMOJI_OBJECT, MAX_BODY_LENGTH_TO_DISPLAY, NAMELESS};
 
 pub trait ShowObjectExt {
     fn show_as_json<T: Serialize>(&mut self, target: T, target_type_name: &str, target_variable_name: &str) -> Vec<u8>;
     fn show_as_json_detailed<T: Serialize>(&mut self, target: T, target_type_name: &str, target_variable_name: &str, emoji: &[u8], style: &str) -> Vec<u8>;
+
+    fn show_as_error<T: Serialize, Err>(&mut self, target: T) -> Vec<u8>;
 }
 
 impl ShowObjectExt for Boolog<'_> {
@@ -86,5 +88,9 @@ impl ShowObjectExt for Boolog<'_> {
         self.write_to_html(result.as_slice(), emoji, timestamp);
 
         result
+    }
+
+    fn show_as_error<T: Serialize, Err>(&mut self, target: T) -> Vec<u8> {
+        self.show_as_json_detailed(target, "Error", "", EMOJI_ERROR, "error")
     }
 }

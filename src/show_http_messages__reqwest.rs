@@ -20,18 +20,11 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 use chrono::Local;
-use reqwest::{Body, Response, Url};
+use reqwest::Url;
 use reqwest::header::HeaderMap;
 use uuid::Uuid;
 use crate::boolog::{ecapsulation_tag, treat_as_code, Boolog};
-use crate::constants::{EMOJI_INCOMING, EMOJI_OBJECT, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, MAX_HEADERS_TO_DISPLAY, NAMELESS};
-
-pub trait ShowHttpReqwestExt {
-    fn show_http_request(&mut self, req: reqwest::Request, callback: fn(&str, &str) -> &str);
-    fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str);
-    fn render_headers_and_body(&self, headers: &HeaderMap, body: Option<&Body>, callback: fn(&str, &str) -> &str);
-    fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str);
-}
+use crate::constants::{EMOJI_INCOMING, EMOJI_OUTGOING, MAX_BODY_LENGTH_TO_DISPLAY, MAX_HEADERS_TO_DISPLAY};
 
 pub struct ConsumedResponse<'a> {
     status: reqwest::StatusCode,
@@ -41,26 +34,34 @@ pub struct ConsumedResponse<'a> {
     resp_body_bytes: &'a [u8]
 }
 
-impl ConsumedResponse {
-    pub fn new(resp: Response) -> ConsumedResponse {
+impl<'a> ConsumedResponse<'a> {
+    pub fn new(resp: reqwest::blocking::Response) -> ConsumedResponse<'a> {
         let status = resp.status();
         let headers = resp.headers();
         let url = resp.url();
         let content_length = resp.content_length();
-        let body_bytes: &[u8] = resp.bytes();
+        let body_bytes = resp.bytes().unwrap();
 
         ConsumedResponse {
             status,
             headers,
             url,
             content_length,
-            resp_body_bytes: body_bytes
+            resp_body_bytes: body_bytes.to_vec().as_slice()
         }
     }
 }
 
-impl ShowHttpReqwestExt for Boolog<'_> {
-    fn show_http_request(&mut self, req: reqwest::Request, callback: fn(&str, &str) -> &str) {
+pub trait ShowHttpViaReqwestExt<'a> {
+    fn show_http_request(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> &'a str);
+    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> &'a str) -> ConsumedResponse<'a>;
+    fn render_headers_and_body(&mut self, headers: &HeaderMap, body: &[u8], callback: fn(&str, &str) -> &'a str) -> Vec<u8>;
+    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> &'a str) -> ConsumedResponse<'a>;
+}
+
+static mut CLIENT: reqwest::blocking::Client = reqwest::blocking::Client::new();
+impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
+    fn show_http_request(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> &'a str) {
         let mut result: Vec<u8> = Vec::new();
         let timestamp = Local::now();
 
@@ -103,7 +104,7 @@ impl ShowHttpReqwestExt for Boolog<'_> {
                 if tmp == "" {
                     result.append("(unset)".as_bytes().to_vec().as_mut());
                 } else {
-                    result.append(callback(param.0, &tmp).as_mut());
+                    result.append(callback(param.0.trim(), &tmp).as_mut());
                 }
             }
             result.append("</td></tr>".as_bytes().to_vec().as_mut());
@@ -116,7 +117,7 @@ impl ShowHttpReqwestExt for Boolog<'_> {
         self.echo_plain_text(text_rendition, EMOJI_OUTGOING, timestamp);
     }
 
-    fn show_http_response(&mut self, resp: reqwest::Response, callback: fn(&str, &str) -> &str) -> ConsumedResponse {
+    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> &'a str) -> ConsumedResponse<'a> {
         let mut rendition: Vec<u8> = Vec::new();
         let timestamp = Local::now();
 
@@ -145,7 +146,7 @@ impl ShowHttpReqwestExt for Boolog<'_> {
 
         result
     }
-    fn render_headers_and_body(&self, headers: &HeaderMap, body_bytes: &[u8], callback: fn(&str, &str) -> &str) -> Vec<u8> {
+    fn render_headers_and_body(&mut self, headers: &HeaderMap, body_bytes: &[u8], callback: fn(&str, &str) -> &'a str) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
 
         // Headers
@@ -216,7 +217,9 @@ impl ShowHttpReqwestExt for Boolog<'_> {
 
         result
     }
-    fn show_http_transaction_blocking(&self, req: reqwest::Request, callback: fn(&str, &str) -> &str) -> ConsumedResponse {
-
+    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> &'a str) -> ConsumedResponse<'a> {
+        self.show_http_request(req.try_clone().unwrap(), callback);
+        let original_resp = CLIENT.execute(req).unwrap();
+        self.show_http_response(original_resp, callback)
     }
 }
