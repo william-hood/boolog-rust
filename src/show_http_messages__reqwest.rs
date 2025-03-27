@@ -142,7 +142,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         rendition.append(style.as_bytes().to_vec().as_mut());
         rendition.append("\">\r\n".as_bytes().to_vec().as_mut());
 
-        let text_rendition = result.status.canonical_reason().unwrap_or("").to_string();
+        let text_rendition = result.status.to_string();
 
         rendition.append("<center><h2>".as_bytes().to_vec().as_mut());
         rendition.append(text_rendition.as_bytes().to_vec().as_mut());

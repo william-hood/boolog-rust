@@ -95,9 +95,96 @@ mod tests {
 
         log.debug("complex boolog here");
 
+        log.show_boolog_detailed(get_sublog(), EMOJI_BOOLOG, "neutral", 0);
 
+        log.debug("One caveat: If you .conclude() a Boolog, it's done. That function closes any output streams and makes it read-only.");
+        log.info("A Boolog also gets concluded if you embed it in another Boolog with the .show_boolog() function.");
+        log.skip_line();
+        log.info("Well, that's the demo. Go forth and do great things!");
 
+        log.conclude();
+    }
 
+    #[derive(Serialize)]
+    struct TestStruct {
+        name: String,
+        value: i32,
+        other_value: f32,
+        // Type recursion in Rust is illegal by design, so this item from the Go/Kotlin version is omitted.
+        // child: Option<TestStruct>,
+        troll: String,
+        rogue: HashMap<String, String>
+    }
+
+    fn get_test_struct() -> TestStruct {
+        let mut rogue = HashMap::new();
+        rogue.insert(String::from("LOTR"), String::from("Sauron"));
+        rogue.insert(String::from("Star Wars"), String::from("Darth Vader"));
+        rogue.insert(String::from("It"), String::from("Pennywise"));
+
+        TestStruct {
+            name: String::from("Hi"),
+            value: 7,
+            other_value: 42.9,
+            troll: String::from("(nothing)"),
+            rogue
+        }
+    }
+
+    #[derive(Serialize)]
+    struct AltStruct {
+        identifier: String,
+        beverage: HashMap<String, String>,
+        pirate: String,
+        test: Option<TestStruct>,
+    }
+
+    fn get_alt_struct() -> AltStruct {
+        let mut beverage = HashMap::new();
+        beverage.insert(String::from("Coffee"), String::from("Kona"));
+        beverage.insert(String::from("Tea"), String::from("Earl Grey"));
+        beverage.insert(String::from("Soda"), String::from("Cola"));
+        beverage.insert(String::from("Water"), String::from("Distilled"));
+        beverage.insert(String::from("Spirit"), String::from("Wine"));
+
+        AltStruct {
+            identifier: String::from("Parent"),
+            beverage,
+            pirate: String::from("arrrrrrgh!"),
+            test: Some(get_test_struct())
+        }
+    }
+
+    fn get_sublog() -> Boolog<'static> {
+        let mut result: Boolog = Boolog::new(
+            "Click this to see one of Boolog's biggest tricks!",
+            None,
+            None,
+            THEME_NONE,
+            true,
+            true,
+            no_header
+        );
+
+        result.info("The truth is that all of the stuff above could've been put into it's own little click-to-expand subsection.");
+        result.info("A Boolog can embed another Booresult. Time stamps, icons, and all!");
+        result.skip_line();
+        result.info("Let's show another of those TestStruct things...");
+        let my_struct = get_alt_struct();
+        result.show_as_json(my_struct, "AltStruct", "my_struct");
+        result.skip_line();
+
+        result.info("Let's repeat some of the things we did in the old log, just for show...");
+        result.debug("Yet another debug line!");
+        result.error("Uh-oh... That wasn't supposed to happen!");
+        result.skip_line();
+
+        result.info("Boolog can be very useful for testing HTTP Requests. Let's use Golang's standard HTTP client to send a request and get a response.");
+
+        let client = reqwest::blocking::Client::new();
+        let req = client.post("https://httpbin.org/get?param1=one&param2=two&param3=buckle-my-shoe").build().unwrap();
+        result.show_http_transaction_blocking(req, callback_do_nothing);
+        result.skip_line();
 
         let mut sublog = Boolog::new(
             "Keep on embedding Boologs within Boologs within Boologs",
@@ -119,40 +206,8 @@ mod tests {
         sublog.skip_line();
         sublog.error("Gee, I wish he'd go away!");
 
-        log.show_boolog_detailed(sublog, EMOJI_BOOLOG, "neutral", 0);
+        result.show_boolog_detailed(sublog, EMOJI_BOOLOG, "passing_test_result", 0);
 
-        log.debug("One caveat: If you .conclude() a Boolog, it's done. That function closes any output streams and makes it read-only.");
-        log.info("A Boolog also gets concluded if you embed it in another Boolog with the .show_boolog() function.");
-        log.skip_line();
-        log.info("Well, that's the demo. Go forth and do great things!");
-
-        log.conclude();
-    }
-
-    #[derive(Serialize)]
-    struct TestStruct {
-        name: String,
-        value: i32,
-        other_value: f32,
-        // Type recursion in Rust is illegal by design
-        //child: Option<TestStruct>,
-        troll: String,
-        rogue: HashMap<String, String>
-    }
-
-    fn get_test_struct() -> TestStruct {
-        let mut rogue = HashMap::new();
-        rogue.insert(String::from("LOTR"), String::from("Sauron"));
-        rogue.insert(String::from("Star Wars"), String::from("Darth Vader"));
-        rogue.insert(String::from("It"), String::from("Pennywise"));
-
-        TestStruct {
-            name: String::from("Hi"),
-            value: 7,
-            other_value: 42.9,
-            //child: None,
-            troll: String::from("(nothing)"),
-            rogue
-        }
+        result
     }
 }
