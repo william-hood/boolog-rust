@@ -46,7 +46,13 @@ impl ConsumedResponse {
             headers: resp.headers().clone(),
             url: resp.url().clone(),
             content_length: resp.content_length().clone(),
-            resp_body_bytes: resp.bytes().unwrap().clone().to_owned().to_vec()
+            resp_body_bytes: {
+                let tmp = resp.bytes();
+                match tmp {
+                    Ok(tmpBytes) => tmpBytes.clone().to_owned().to_vec(),
+                    _ => Vec::new()
+                }
+            }
         }
     }
 }
@@ -109,7 +115,12 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         }
         result.append("\r\n</table><br>".as_bytes().to_vec().as_mut());
 
-        result.append(&mut self.render_headers_and_body(req.headers(), req.body().unwrap().as_bytes().unwrap().to_vec(), callback));
+
+
+        result.append(&mut self.render_headers_and_body(req.headers(), match req.body() {
+            None => Vec::new(),
+            _ => req.body().unwrap().as_bytes().unwrap().to_vec()
+        }, callback));
 
         self.write_to_html(result.as_slice(), EMOJI_OUTGOING, timestamp);
         self.echo_plain_text(text_rendition.as_bytes(), EMOJI_OUTGOING, timestamp);
@@ -164,6 +175,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
 
                 rendered_headers.append("</td></tr>".as_bytes().to_vec().as_mut());
             }
+            rendered_headers.append("\r\n</table><br>".as_bytes().to_vec().as_mut());
 
             if headers.len() > MAX_HEADERS_TO_DISPLAY {
                 let identifier = Uuid::new_v4().to_string();

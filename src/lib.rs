@@ -34,12 +34,14 @@ mod show_http_messages__reqwest;
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::fs::File;
     use std::path::PathBuf;
     use homedir::my_home;
     use serde::Serialize;
-    use crate::boolog::{default_header, no_header, Boolog};
+    use crate::boolog::{callback_do_nothing, default_header, no_header, Boolog};
     use crate::constants::EMOJI_BOOLOG;
     use crate::show_as_json::ShowObjectExt;
+    use crate::show_http_messages__reqwest::ShowHttpViaReqwestExt;
     use crate::theme_light::THEME_LIGHT;
     use crate::theme_none::THEME_NONE;
 
@@ -72,6 +74,30 @@ mod tests {
 
         let check = get_test_struct();
         log.show_as_json(check, "TestStruct", "check");
+        log.skip_line();
+
+        log.info("Boolog can be very useful for testing HTTP Requests. Let's use Golang's standard HTTP client to send a request and get a response.");
+
+        let client = reqwest::blocking::Client::new();
+        let req = client.get("https://httpbin.org/get?param1=latida&param2=tweedledee&param3=whatever").build().unwrap();
+        log.show_http_transaction_blocking(req, callback_do_nothing);
+        log.skip_line();
+
+        log.info("Boolog also has a .show_as_error() function for error types.");
+
+        let check = File::open("nonexistent_file.txt");
+        match check {
+            Ok(mut file) => {log.error("Someone actually created a file called \"shouldnt exist.xyz\". Delete it."); ()}
+            Err(error) => {log.show_as_error(serde_error::Error::new(&error), "Tried opening nonexistent_file.txt"); ()}
+        }
+
+        log.skip_line();
+
+        log.debug("complex boolog here");
+
+
+
+
 
         let mut sublog = Boolog::new(
             "Keep on embedding Boologs within Boologs within Boologs",
@@ -95,7 +121,10 @@ mod tests {
 
         log.show_boolog_detailed(sublog, EMOJI_BOOLOG, "neutral", 0);
 
-        log.info("That's all folks!");
+        log.debug("One caveat: If you .conclude() a Boolog, it's done. That function closes any output streams and makes it read-only.");
+        log.info("A Boolog also gets concluded if you embed it in another Boolog with the .show_boolog() function.");
+        log.skip_line();
+        log.info("Well, that's the demo. Go forth and do great things!");
 
         log.conclude();
     }
