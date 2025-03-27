@@ -168,7 +168,7 @@ mod tests {
         );
 
         result.info("The truth is that all of the stuff above could've been put into it's own little click-to-expand subsection.");
-        result.info("A Boolog can embed another Booresult. Time stamps, icons, and all!");
+        result.info("A Boolog can embed another Boolog. Time stamps, icons, and all!");
         result.skip_line();
         result.info("Let's show another of those TestStruct things...");
         let my_struct = get_alt_struct();
