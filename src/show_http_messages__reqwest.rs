@@ -31,6 +31,7 @@ lazy_static! {
     static ref CLIENT: reqwest::blocking::Client = reqwest::blocking::Client::new();
 }
 
+/// Showing a Response from reqwest will consume it. This is passed back to give your program the same information it would have had directly using the Response.
 pub struct ConsumedResponse {
     status: reqwest::StatusCode,
     headers: HeaderMap,
@@ -65,6 +66,8 @@ pub trait ShowHttpViaReqwestExt<'a> {
 }
 
 impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
+
+    /// Use this to render a reqwest (blocking) HTTP Request. The callback function can be used to allow additional processing for strings passed through Boolog. Example uses would be JSON Pretty-Printing or Base64 decoding. Use callback_do_nothing() if you don't need a callback function.
     fn show_http_request(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) {
         let mut result: Vec<u8> = Vec::new();
         let timestamp = Local::now();
@@ -126,6 +129,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         self.echo_plain_text(text_rendition.as_bytes(), EMOJI_OUTGOING, timestamp);
     }
 
+    /// Use this to render a reqwest (blocking) HTTP Response. The callback function can be used to allow additional processing for strings passed through Boolog. Example uses would be JSON Pretty-Printing or Base64 decoding. Use callback_do_nothing() if you don't need a callback function.
     fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse {
         let mut rendition: Vec<u8> = Vec::new();
         let timestamp = Local::now();
@@ -227,6 +231,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         result
     }
 
+    // Given a reqwest (blocking) HTTP Request, this will render the request, send it, receive the response and render the response. The CallbackFunction can be used to allow additional processing for strings passed through Boolog. Example uses would be JSON Pretty-Printing or Base64 decoding. A ConsumedResponse type is returned, containing the same information as the Response would have.
     fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse {
         self.show_http_request(req.try_clone().unwrap(), callback);
         let original_resp = CLIENT.execute(req).unwrap();

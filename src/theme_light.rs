@@ -78,7 +78,7 @@ pub const THEME_LIGHT: &str = "
         }
 
         .plate {
-            background-color: WhiteBlue;
+            background-color: #DBE9FA;
         }
 
         .exception {

@@ -33,10 +33,12 @@ pub trait ShowObjectExt {
 }
 
 impl ShowObjectExt for Boolog<'_> {
+    /// This will render any complex type as an object in the HTML output. It will be outlined showing the type and variable name, with a JSON rendition of the contents. If the contents are lengthy, it will automatically be made click-to-expand.
     fn show_as_json<T: Serialize>(&mut self, target: T, target_type_name: &str, target_variable_name: &str) -> Vec<u8> {
         self.show_as_json_detailed(target, target_type_name, target_variable_name, EMOJI_OBJECT, "plate")
     }
 
+    /// Same as show_as_json() but allows override of the emoji and style.
     fn show_as_json_detailed<T: Serialize>(&mut self, target: T, target_type_name: &str, target_variable_name: &str, emoji: &[u8], style: &str) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::new();
         let timestamp = Local::now();
@@ -90,6 +92,7 @@ impl ShowObjectExt for Boolog<'_> {
         result
     }
 
+    // This reders an Object as show_as_json() does, but with the assumption it is being passed some form of Error type.
     fn show_as_error<T: Serialize>(&mut self, target: T, error_type_details: &str) -> Vec<u8> {
         self.show_as_json_detailed(target, "Error", error_type_details, EMOJI_ERROR, "exception")
     }

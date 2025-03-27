@@ -34,6 +34,7 @@ use crate::constants::{ALREADY_CONCLUDED_MESSAGE, EMOJI_BOOLOG, EMOJI_DEBUG, EMO
 
 const STARTING_CONTENT: &str = "<table class=\"left_justified\">\r\n";
 
+/// Implements a rich logging system that outputs directly to HTML, with counterpart output to the console or a text file.
 pub struct Boolog<'a> {
     title: &'a str,
     for_plain_text: Option<File>,
@@ -89,6 +90,7 @@ impl<'a> Boolog<'a> {
         result
     }
 
+    /// Returns true if this Boolog has been used.
     pub fn was_used(&mut self) -> bool {
         (self.content.len() - STARTING_CONTENT.len()) > 0
     }
@@ -170,6 +172,7 @@ impl<'a> Boolog<'a> {
         Ok(())
     }
 
+    /// Concludes this Boolog. All buffered HTML is written to the file if one is associated with it. Once concluded, this Boolog becomes read only.
     pub fn conclude(&mut self) -> Vec<u8> {
         if !self.is_concluded {
             self.is_concluded = true;
@@ -198,13 +201,15 @@ impl<'a> Boolog<'a> {
             }
         }
 
-        return self.content.clone();
+        self.content.clone()
     }
 
+    /// This is the standard way to output text through a Boolog. No emoji will be added to the output line.
     pub fn info(&mut self, message: &str) -> Result<(), String> {
         return self.info_detailed(message, EMOJI_TEXT_BLANK_LINE);
     }
 
+    /// This outputs text to this Boolog, but allows you to specify an emoji to appear next to the line.
     pub fn info_detailed(&mut self, message: &str, emoji: &[u8]) -> Result<(), String> {
         let timestamp = Local::now();
         {
@@ -217,6 +222,7 @@ impl<'a> Boolog<'a> {
         return self.echo_plain_text(message.as_bytes(), emoji, timestamp);
     }
 
+    /// Use this to output a highlighted debugging message. The HTML output will highlight the text in yellow (or orange, depending on the theme used). Both HTML and Plaintext will output the line with a debugging emoji icon.
     pub fn debug(&mut self, message: &str) -> Result<(), String> {
         let timestamp = Local::now();
         let result = self.write_to_html(highlight(message).as_bytes(), EMOJI_DEBUG, timestamp);
@@ -227,6 +233,7 @@ impl<'a> Boolog<'a> {
         return self.echo_plain_text(message.as_bytes(), EMOJI_DEBUG, timestamp);
     }
 
+    /// Use this to output a highlighted error message. The HTML output will highlight the text in yellow (or orange, depending on the theme used). Both HTML and Plaintext will output the line with an error emoji icon.
     pub fn error(&mut self, message: &str) -> Result<(), String> {
         let timestamp = Local::now();
         let result = self.write_to_html(highlight(message).as_bytes(), EMOJI_ERROR, timestamp);
@@ -237,6 +244,7 @@ impl<'a> Boolog<'a> {
         return self.echo_plain_text(message.as_bytes(), EMOJI_ERROR, timestamp);
     }
 
+    /// Skips a line in the Boolog output. The skipped line will still include a timestamp.
     pub fn skip_line(&mut self) -> Result<(), String> {
         let timestamp = Local::now();
         let result = self.write_to_html("".as_bytes(), EMOJI_TEXT_BLANK_LINE, timestamp);
@@ -247,10 +255,12 @@ impl<'a> Boolog<'a> {
         return self.echo_plain_text("".as_bytes(), EMOJI_TEXT_BLANK_LINE, timestamp);
     }
 
+    /// Embeds another Boolog into this one as a subordinate. (The subordinate Boolog will be concluded and become read-only.) The HTML output will show the subordinate as a click-to-expand section.
     pub fn show_boolog(&mut self, subordinate: Boolog) -> Result<Vec<u8>, String> {
         return self.show_boolog_detailed(subordinate, EMOJI_BOOLOG, "boolog", 0);
     }
 
+    /// Embeds another Boolog into this one as a subordinate. (The subordinate Boolog will be concluded and become read-only.) This verion of the function allows you to specify an emoji icon and a theme. Use 0 for the recurseLevel. The HTML output will show the subordinate as a click-to-expand section.
     pub fn show_boolog_detailed(&mut self, mut subordinate: Boolog, emoji: &[u8], style: &str, recurse_level: u8) -> Result<Vec<u8>, String> {
         let timestamp = Local::now();
         let subordinate_content: Vec<u8> = subordinate.conclude();
@@ -267,6 +277,7 @@ impl<'a> Boolog<'a> {
     }
 }
 
+/// Pass this function in for the header function when creating a Boolog. This will use the standard, default header. You may also use no_header() or you may write your own.
 pub fn default_header(title: &str) -> Vec<u8> {
     let mut result: Vec<u8> = Vec::new();
     let mut builder: StringBuilder = StringBuilder::new();
@@ -280,16 +291,19 @@ pub fn default_header(title: &str) -> Vec<u8> {
     result
 }
 
+/// Pass this function in for the header function when creating a Boolog if there is no need for a header. Use this for a sublog or any Boolog that does not have an HTML file.
 pub fn no_header(_: &str) -> Vec<u8> {
     Vec::new()
 }
 
-pub fn highlight_with_style(message: &str, style: &str) -> String {
-    return format!("<p class=\"{style} outlined\">&nbsp;{message}&nbsp;</p>")
-}
-
+/// Use this to highlight a message and send the result through the .info() method. The HTML output will highlight the text in yellow (or orange, depending on the theme used).
 pub fn highlight(message: &str) -> String {
     return highlight_with_style(message, "highlighted");
+}
+
+/// More detailed version of .highlight() that lets you override the style. Send the result through the .info() method.
+pub fn highlight_with_style(message: &str, style: &str) -> String {
+    return format!("<p class=\"{style} outlined\">&nbsp;{message}&nbsp;</p>")
 }
 
 pub fn ecapsulation_tag() -> String {
@@ -317,10 +331,12 @@ pub fn wrap_as_subordinate(boolog_title: &str, boolog_content: Vec<u8>, style: &
     result
 }
 
+/// Pass the result of this to .info() (or any other method that outputs to HTML) and the text will show as a monospace font, keeping any line breaks or other formatting used.
 pub fn treat_as_code(value: &str) -> String {
     format!("<pre><code><xmp>{value}</xmp></code></pre>")
 }
 
+/// Use this for any method that requires a callback function passed in if you don't want/need to write your own.
 pub fn callback_do_nothing(field_name: &str, field_value: &str) -> Vec<u8> {
     field_value.as_bytes().to_vec()
 }

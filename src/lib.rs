@@ -146,11 +146,12 @@ mod tests {
         beverage.insert(String::from("Soda"), String::from("Cola"));
         beverage.insert(String::from("Water"), String::from("Distilled"));
         beverage.insert(String::from("Spirit"), String::from("Wine"));
+        beverage.insert(String::from("Cocktail"), String::from("Lauwiliwilinukunuku'oi'oi"));
 
         AltStruct {
-            identifier: String::from("Parent"),
+            identifier: String::from("Methylchloroisothiazolinone"),
             beverage,
-            pirate: String::from("arrrrrrgh!"),
+            pirate: String::from("AAAaaaaaaaarrrrrrgh!"),
             test: Some(get_test_struct())
         }
     }
