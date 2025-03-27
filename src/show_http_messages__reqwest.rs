@@ -31,39 +31,31 @@ lazy_static! {
     static ref CLIENT: reqwest::blocking::Client = reqwest::blocking::Client::new();
 }
 
-pub struct ConsumedResponse<'a> {
+pub struct ConsumedResponse {
     status: reqwest::StatusCode,
-    headers: &'a HeaderMap,
-    url: &'a Url,
+    headers: HeaderMap,
+    url: Url,
     content_length: Option<u64>,
-    resp_body_bytes: &'a [u8]
+    resp_body_bytes: Vec<u8>
 }
 
-impl<'a> ConsumedResponse<'a> {
-    pub fn new(resp: reqwest::blocking::Response) -> ConsumedResponse<'a> {
-        let result: ConsumedResponse;
-        let status = resp.status();
-        let headers = &resp.headers().clone();
-        let url = &resp.url().clone();
-        let content_length = resp.content_length().clone();
-        let body_bytes = resp.bytes().unwrap().clone().as_mut();
-
-        result = ConsumedResponse {
-            status,
-            headers,
-            url,
-            content_length,
-            resp_body_bytes: body_bytes.to_vec().as_slice()
-        };
-        result
+impl ConsumedResponse {
+    pub fn new(resp: reqwest::blocking::Response) -> ConsumedResponse {
+        ConsumedResponse {
+            status: resp.status(),
+            headers: resp.headers().clone(),
+            url: resp.url().clone(),
+            content_length: resp.content_length().clone(),
+            resp_body_bytes: resp.bytes().unwrap().clone().to_owned().to_vec()
+        }
     }
 }
 
 pub trait ShowHttpViaReqwestExt<'a> {
     fn show_http_request(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>);
-    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse<'a>;
-    fn render_headers_and_body(&mut self, headers: &HeaderMap, body: &[u8], callback: fn(&str, &str) -> Vec<u8>) -> &mut Vec<u8>;
-    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse<'a>;
+    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse;
+    fn render_headers_and_body(&mut self, headers: &HeaderMap, body: Vec<u8>, callback: fn(&str, &str) -> Vec<u8>) -> Vec<u8>;
+    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse;
 }
 
 impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
@@ -117,13 +109,13 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         }
         result.append("\r\n</table><br>".as_bytes().to_vec().as_mut());
 
-        result.append(self.render_headers_and_body(req.headers(), req.body().unwrap().as_bytes().unwrap(), callback));
+        result.append(&mut self.render_headers_and_body(req.headers(), req.body().unwrap().as_bytes().unwrap().to_vec(), callback));
 
         self.write_to_html(result.as_slice(), EMOJI_OUTGOING, timestamp);
         self.echo_plain_text(text_rendition.as_bytes(), EMOJI_OUTGOING, timestamp);
     }
 
-    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse<'a> {
+    fn show_http_response(&mut self, resp: reqwest::blocking::Response, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse {
         let mut rendition: Vec<u8> = Vec::new();
         let timestamp = Local::now();
 
@@ -145,15 +137,15 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         rendition.append(text_rendition.as_bytes().to_vec().as_mut());
         rendition.append("</h2>".as_bytes().to_vec().as_mut());
 
-        rendition.append(self.render_headers_and_body(result.headers, result.resp_body_bytes, callback).as_mut());
+        rendition.append(self.render_headers_and_body(&result.headers, result.resp_body_bytes.clone(), callback).as_mut());
 
         self.write_to_html(rendition.as_slice(), EMOJI_INCOMING, timestamp);
         self.echo_plain_text(text_rendition.as_bytes(), EMOJI_INCOMING, timestamp);
 
         result
     }
-    fn render_headers_and_body(&mut self, headers: &HeaderMap, body_bytes: &[u8], callback: fn(&str, &str) -> Vec<u8>) -> &mut Vec<u8> {
-        let result: &mut Vec<u8> = Vec::new().as_mut();
+    fn render_headers_and_body(&mut self, headers: &HeaderMap, body_bytes: Vec<u8>, callback: fn(&str, &str) -> Vec<u8>) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::new();
 
         // Headers
         if headers.len() > 0 {
@@ -164,12 +156,11 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
 
             for (key,value) in headers.iter() {
                 rendered_headers.append("<tr><td>".as_bytes().to_vec().as_mut());
-                rendered_headers.append(key.as_str().as_bytes().to_vec().as_mut());
+                rendered_headers.append(key.clone().as_str().as_bytes().to_vec().as_mut());
                 rendered_headers.append("</td><td>".as_bytes().to_vec().as_mut());
 
-                // reqwest appears to return only a single value per key, assuming the key would appear more than once if multiple values exist.
-                let processed_string = callback(key.as_str(), value.to_str().unwrap().as_mut()).as_mut();
-                rendered_headers.append(processed_string);
+                // reqwest appears to return only a single value per key; I'm assuming the key would appear more than once if multiple values exist.
+                rendered_headers.append(callback(key.as_str(), value.to_str().unwrap()).as_mut());
 
                 rendered_headers.append("</td></tr>".as_bytes().to_vec().as_mut());
             }
@@ -199,7 +190,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         if body_bytes.len() < 1 {
             result.append("<br><br><small><i>(no payload)</i></small></center>".as_bytes().to_vec().as_mut());
         } else {
-            let string_payload = String::from_utf8_lossy(body_bytes);
+            let string_payload = String::from_utf8_lossy(body_bytes.as_slice());
             let payload_size = string_payload.as_ref().len();
             result.append("<br><b>Payload</b><br></center>\r\n".as_bytes().to_vec().as_mut());
             let rendered_body = treat_as_code(string_payload.as_ref());
@@ -224,7 +215,7 @@ impl<'a> ShowHttpViaReqwestExt<'a> for Boolog<'a> {
         result
     }
 
-    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse<'a> {
+    fn show_http_transaction_blocking(&mut self, req: reqwest::blocking::Request, callback: fn(&str, &str) -> Vec<u8>) -> ConsumedResponse {
         self.show_http_request(req.try_clone().unwrap(), callback);
         let original_resp = CLIENT.execute(req).unwrap();
         self.show_http_response(original_resp, callback)
