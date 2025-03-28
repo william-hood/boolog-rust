@@ -8,6 +8,7 @@ repository = "https://github.com/william-hood/boolog-rust"
 keywords = ["log", "logger", "logging", "html"]
 categories = ["development-tools", "development-tools::debugging", "development-tools::testing", "visualization"]
 exclude = ["/examples", "/target", "README.md", "/.idea"]
+description = "A logger that writes directly to HTML and allows visualizations of data structures, HTTP Transactions, and errors. Provides click-to-expand for log subsections and large sections of data. Supports three dark and three light themes."
 
 [dependencies]
 chrono = "0.4.40"
