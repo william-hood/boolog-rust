@@ -7,7 +7,7 @@ readme = "README.txt"
 repository = "https://github.com/william-hood/boolog-rust"
 keywords = ["log", "logger", "logging", "html"]
 categories = ["development-tools", "development-tools::debugging", "development-tools::testing", "visualization"]
-exclude = ["/examples", "/target", "README.md"]
+exclude = ["/examples", "/target", "README.md", "/.idea"]
 
 [dependencies]
 chrono = "0.4.40"
