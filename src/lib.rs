@@ -19,17 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-mod theme_none;
-mod theme_classic;
-mod theme_light_flat;
-mod theme_light;
-mod theme_dark;
-mod theme_dark_flat;
-mod theme_dark_gradient;
-mod constants;
-mod boolog;
-mod show_as_json;
-mod show_http_messages__reqwest;
+pub mod theme_none;
+pub mod theme_classic;
+pub mod theme_light_flat;
+pub mod theme_light;
+pub mod theme_dark;
+pub mod theme_dark_flat;
+pub mod theme_dark_gradient;
+pub mod constants;
+pub mod boolog;
+pub mod show_as_json;
+pub mod show_http_messages__reqwest;
 
 #[cfg(test)]
 mod tests {
