@@ -8,7 +8,7 @@ visualize what goes on with back-end processes, such as a cloud service or a tes
 (Boolog is the "spiritual" successor of an automated test logger project created at one of the author's previous places of employment.)
 
 ### To install for use in your project
-### `TBD`
+### `cargo add boolog`
 ---
 ## Example Code
 For usage, refer to this example program and Go Doc comments.
