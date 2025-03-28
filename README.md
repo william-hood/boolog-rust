@@ -1,18 +1,32 @@
-<img src="examples/Boolog Rust Prototype.jpg" alt="Screen Shot of Output">
+# BOOLOG
+<img align="left" src="examples/boolog-logo-sm.gif">
 
-# <img src="examples/boolog-logo-sm.gif"> 🚧 WORK IN PROGRESS 🚧
+**Rich Logging System**
 
-## I'm in the process of translating Boolog into Rust, based on its Go and Kotlin versions.
+Boolog allows your Rust program to log directly to an HTML file, with optional counterpart logging to the console. This will help developers and managers alike better
+visualize what goes on with back-end processes, such as a cloud service or a test suite against REST API calls.
+(Boolog is the "spiritual" successor of an automated test logger project created at one of the author's previous places of employment.)
 
-## Why? --Because I want to learn Rust, and translating an existing piece of my software is the fastest way I can learn a new programming language.
+### To install for use in your project
+### `TBD`
+---
+## Example Code
+For usage, refer to this example program and Go Doc comments.
 
-## Watch this space and when Boolog for Rust is ready it'll be announced here.
+[Example Program](src/lib.rs) (Scroll down and look for `fn it_works()` in the `tests` module.)
 
-## Golang version is [here](https://github.com/william-hood/boolog-go)
+## Supported Themes
 
-## Kotlin/Java version is [here](https://github.com/william-hood/Hoodland-Open-Source-Projects) under its old title "Memoir". Updating Memoir to be Boolog, complete with the new themes, will be my next project after this.
+[Themes Poster (GIF)](examples/Poster.gif)
 
-## All of my open source software is released under the MIT license, because that's the one employers like best!
+GitHub won't let me directly link to the HTML examples showing each theme (it forces it to resolve as HTML source code).
+Instead, I've bundled the examples into a ZIP archive that you can preview on your computer.
+
+![Do this...](examples/Instructions.gif)
+
+To get the archive, click [here](examples/Theme-Examples.zip) and then click the "Download Raw File" icon at right.
+
+
 
 ---
 ## MIT License

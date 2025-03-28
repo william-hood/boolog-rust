@@ -1,7 +1,13 @@
 [package]
 name = "boolog"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+license-file = "LICENSE"
+readme = "README.txt"
+repository = "https://github.com/william-hood/boolog-rust"
+keywords = ["log", "logger", "logging", "html"]
+categories = ["development-tools", "development-tools::debugging", "development-tools::testing", "visualization"]
+exclude = ["/examples", "/target", "README.md"]
 
 [dependencies]
 chrono = "0.4.40"
