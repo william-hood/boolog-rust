@@ -1,10 +1,12 @@
-<img align="left" src="examples/boolog-logo-sm.gif">
 # BOOLOG
+<img align="left" src="examples/boolog-logo-sm.gif">
+
 **Rich Logging System**
 
 Boolog allows your Rust program to log directly to an HTML file, with optional counterpart logging to the console. This will help developers and managers alike better
 visualize what goes on with back-end processes, such as a cloud service or a test suite against REST API calls.
 (Boolog is the "spiritual" successor of an automated test logger project created at one of the author's previous places of employment.)
+
 
 ### To install for use in your project
 ### `cargo add boolog`
