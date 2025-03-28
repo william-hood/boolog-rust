@@ -1,6 +1,5 @@
-# BOOLOG
 <img align="left" src="examples/boolog-logo-sm.gif">
-
+# BOOLOG
 **Rich Logging System**
 
 Boolog allows your Rust program to log directly to an HTML file, with optional counterpart logging to the console. This will help developers and managers alike better
