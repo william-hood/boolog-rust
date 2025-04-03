@@ -34,6 +34,11 @@ Instead, I've bundled the examples into a ZIP archive that you can preview on yo
 
 To get the archive, click [here](examples/Theme-Examples.zip) and then click the "Download Raw File" icon at right.
 
+---
+
+**WINDOWS USERS MAY NEED TO FOLLOW THESE STEPS TO PROPERLY DISPLAY EMOJIS IN THE CONSOLE**
+
+https://akr.am/blog/posts/using-utf-8-in-the-windows-terminal
 
 
 ---
