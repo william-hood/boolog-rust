@@ -1,7 +1,14 @@
 # BOOLOG
+
+*Go version [here](https://github.com/william-hood/boolog-go)*
+
+*Kotlin version [here](https://github.com/william-hood/boolog-kotlin)*
+
+*Java & JUnit versions (coming soon)*
+<hr>
 <img align="left" src="examples/boolog-logo-sm.gif">
 
-**Rich Logging System**
+**Boolog Rich Logging System - Direct-to-HTML**
 
 Boolog allows your Rust program to log directly to an HTML file, with optional counterpart logging to the console. This will help developers and managers alike better
 visualize what goes on with back-end processes, such as a cloud service or a test suite against REST API calls.
