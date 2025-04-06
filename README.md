@@ -4,7 +4,10 @@
 
 *Kotlin version [here](https://github.com/william-hood/boolog-kotlin)*
 
-*Java & JUnit versions (coming soon)*
+*Java version [here](https://github.com/william-hood/boolog-java)*
+
+*JUnit Testing version [here](https://github.com/william-hood/boolog-junit)*
+
 <hr>
 <img align="left" src="examples/boolog-logo-sm.gif">
 
