@@ -26,6 +26,8 @@ For usage, refer to this example program and Go Doc comments.
 
 [Example Program](src/lib.rs) (Scroll down and look for `fn it_works()` in the `tests` module.)
 
+*If you run the example code on your system, expect the actual log file to appear in `(User Home)/Documents/Test Results`.*
+
 ## Supported Themes
 
 [Themes Poster (GIF)](examples/Poster.gif)
